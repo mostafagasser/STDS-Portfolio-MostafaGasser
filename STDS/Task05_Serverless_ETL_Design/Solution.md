@@ -22,6 +22,7 @@ To support these goals, GreenStream Energy plans to design an automated, serverl
 ## 2. Task A: ETL Architecture Diagram
 
 ### Conceptual System Design
+![Pipeline](Pipline.jpeg)
 
 ### Overall Data Flow Description
 
