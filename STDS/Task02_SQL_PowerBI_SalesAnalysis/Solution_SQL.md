@@ -1,16 +1,30 @@
-USE AdventureWorks;
-GO
+# Sales Analysis – SQL Queries (AdventureWorks)
 
--- 1. General KPIs
+## Database Used
+
+**AdventureWorks**
+
+---
+
+## 1️⃣ General KPIs
+
+```sql
+-- Total Orders, Revenue, Avg Order Value, Total Customers
 SELECT
     COUNT(DISTINCT SalesOrderID) AS TotalOrders,
     SUM(TotalDue) AS TotalRevenue,
     AVG(TotalDue) AS AvgOrderValue,
     COUNT(DISTINCT CustomerID) AS TotalCustomers
 FROM Sales.SalesOrderHeader;
+```
 
--- 2. Time-based Analysis
---Daily Summary
+---
+
+## 2️⃣ Time-Based Analysis
+
+### Daily Summary
+
+```sql
 SELECT 
     CONVERT(date, OrderDate) AS OrderDay, 
     COUNT(*) AS TotalOrders, 
@@ -18,8 +32,11 @@ SELECT
 FROM Sales.SalesOrderHeader
 GROUP BY CONVERT(date, OrderDate)
 ORDER BY OrderDay;
+```
 
--- Monthly Summary
+### Monthly Summary
+
+```sql
 SELECT 
     YEAR(OrderDate) AS [Year], 
     MONTH(OrderDate) AS [Month],
@@ -28,8 +45,11 @@ SELECT
 FROM Sales.SalesOrderHeader
 GROUP BY YEAR(OrderDate), MONTH(OrderDate)
 ORDER BY [Year],[Month];
+```
 
--- Yearly Summary
+### Yearly Summary
+
+```sql
 SELECT 
     YEAR(OrderDate) AS [Year], 
     COUNT(*) AS Orders, 
@@ -37,12 +57,15 @@ SELECT
 FROM Sales.SalesOrderHeader
 GROUP BY YEAR(OrderDate)
 ORDER BY [Year];
+```
 
+---
 
+## 3️⃣ Product Performance
 
---3. Product Performance
+### Top 20 Products by Revenue
 
--- Top 20 Products by Revenue
+```sql
 SELECT TOP 20
     p.ProductID, 
     p.Name AS Product,
@@ -52,8 +75,11 @@ FROM Sales.SalesOrderDetail sd
 JOIN Production.Product p ON sd.ProductID = p.ProductID
 GROUP BY p.ProductID, p.Name
 ORDER BY Revenue DESC;
+```
 
--- Top 50 Products by Estimated Profit
+### Top 50 Products by Estimated Profit
+
+```sql
 SELECT TOP 50
     p.ProductID, 
     p.Name AS Product,
@@ -64,9 +90,13 @@ FROM Sales.SalesOrderDetail sd
 JOIN Production.Product p ON sd.ProductID = p.ProductID
 GROUP BY p.ProductID, p.Name
 ORDER BY EstimatedProfit DESC;
+```
 
+---
 
--- 4. Category and Subcategory Analysis
+## 4️⃣ Category & Subcategory Analysis
+
+```sql
 SELECT 
     pc.Name AS Category,
     psc.Name AS Subcategory,
@@ -78,8 +108,13 @@ LEFT JOIN Production.ProductSubcategory psc ON p.ProductSubcategoryID = psc.Prod
 LEFT JOIN Production.ProductCategory pc ON psc.ProductCategoryID = pc.ProductCategoryID
 GROUP BY pc.Name, psc.Name
 ORDER BY Revenue DESC;
+```
 
--- 5. Discount and Pricing Analysis
+---
+
+## 5️⃣ Discount & Pricing Analysis
+
+```sql
 SELECT 
     p.Name AS Product,
     AVG(sd.UnitPriceDiscount) AS AvgDiscount,
@@ -90,10 +125,13 @@ FROM Sales.SalesOrderDetail sd
 JOIN Production.Product p ON sd.ProductID = p.ProductID
 GROUP BY p.Name
 ORDER BY AvgDiscount DESC;
+```
 
+---
 
+## 6️⃣ Low Selling Products
 
--- 6. Low Selling Products
+```sql
 SELECT 
     p.ProductID, 
     p.Name AS Product,
@@ -104,8 +142,13 @@ LEFT JOIN Sales.SalesOrderDetail sd ON p.ProductID = sd.ProductID
 GROUP BY p.ProductID, p.Name
 HAVING ISNULL(SUM(sd.OrderQty), 0) <= 5
 ORDER BY TotalQtySold ASC;
+```
 
--- 7. Territory Performance
+---
+
+## 7️⃣ Territory Performance
+
+```sql
 SELECT 
     st.Name AS Territory,
     SUM(soh.TotalDue) AS TotalRevenue,
@@ -115,9 +158,13 @@ FROM Sales.SalesOrderHeader soh
 JOIN Sales.SalesTerritory st ON soh.TerritoryID = st.TerritoryID
 GROUP BY st.Name
 ORDER BY TotalRevenue DESC;
+```
 
--- 8. Salesperson Performance
+---
 
+## 8️⃣ Salesperson Performance
+
+```sql
 SELECT 
     sp.BusinessEntityID AS SalesPersonID,
     p.FirstName + ' ' + p.LastName AS SalesPersonName,
@@ -128,9 +175,13 @@ JOIN Sales.SalesPerson sp ON soh.SalesPersonID = sp.BusinessEntityID
 JOIN Person.Person p ON sp.BusinessEntityID = p.BusinessEntityID
 GROUP BY sp.BusinessEntityID, p.FirstName, p.LastName
 ORDER BY TotalSales DESC;
+```
 
+---
 
--- 9. Profitability by Region
+## 9️⃣ Profitability by Region
+
+```sql
 SELECT 
     st.Name AS Territory,
     SUM(sd.LineTotal) AS Revenue,
@@ -142,10 +193,13 @@ JOIN Production.Product p ON sd.ProductID = p.ProductID
 JOIN Sales.SalesTerritory st ON soh.TerritoryID = st.TerritoryID
 GROUP BY st.Name
 ORDER BY Profit DESC;
+```
 
+---
 
--- 10. Customer Insights
+## 10️⃣ Customer Insights
 
+```sql
 SELECT 
     c.CustomerID,
     p.FirstName + ' ' + p.LastName AS CustomerName,
@@ -157,10 +211,13 @@ JOIN Sales.SalesOrderHeader soh ON c.CustomerID = soh.CustomerID
 JOIN Person.Person p ON c.PersonID = p.BusinessEntityID
 GROUP BY c.CustomerID, p.FirstName, p.LastName
 ORDER BY TotalSpent DESC;
+```
 
+---
 
--- 11. Product Sales Trend
+## 11️⃣ Product Sales Trend
 
+```sql
 SELECT 
     p.Name AS Product,
     FORMAT(soh.OrderDate, 'yyyy-MM') AS SalesMonth,
@@ -170,14 +227,15 @@ JOIN Sales.SalesOrderDetail sd ON soh.SalesOrderID = sd.SalesOrderID
 JOIN Production.Product p ON sd.ProductID = p.ProductID
 GROUP BY p.Name, FORMAT(soh.OrderDate, 'yyyy-MM')
 ORDER BY p.Name, SalesMonth;
+```
 
+---
 
+## 12️⃣ View for Dashboard
 
--- View For Dashboard
-/* 
-DROP VIEW IF EXISTS vw_SalesAnalysis;
-GO
-CREATE VIEW SalesAnalysisView AS
+```sql
+-- DROP VIEW IF EXISTS vw_SalesAnalysis;
+-- CREATE VIEW SalesAnalysisView AS
 SELECT 
     soh.SalesOrderID,
     soh.OrderDate,
@@ -206,12 +264,4 @@ JOIN Production.Product AS p
     ON sd.ProductID = p.ProductID
 JOIN Sales.Customer AS c 
     ON soh.CustomerID = c.CustomerID
-JOIN Person.Person AS per 
-    ON c.PersonID = per.BusinessEntityID
-LEFT JOIN Sales.SalesTerritory AS st 
-    ON soh.TerritoryID = st.TerritoryID;
-
-Go
-SELECT * FROM SalesAnalysisView;
-
-*/
+```
